@@ -2,6 +2,8 @@
 
 This project provides a simple web application for Sterling Resorts members built with **Node.js**, **Next.js** and **PostgreSQL**.
 
+<!-- Verification: Simple change added for testing PR creation capability -->
+
 ## Features
 - Member login using member ID and password.
 - View resort details including seasons and other information.
