@@ -21,10 +21,27 @@ app.prepare().then(() => {
   // API routes
   server.post('/api/login', async (req, res) => {
     const { memberId, password } = req.body;
+    if (!memberId || !password) return res.status(400).json({ error: 'Member ID and password required' });
+    
     try {
-      // TODO: validate with database
-      const result = await db.query('SELECT id FROM members WHERE id=$1 AND password=$2', [memberId, password]);
+      const result = await db.query('SELECT id, password FROM members WHERE id=$1', [memberId]);
       if (result.rowCount === 0) return res.status(401).json({ error: 'Invalid credentials' });
+      
+      const user = result.rows[0];
+      const bcrypt = require('bcrypt');
+      
+      let isValid = false;
+      if (user.password.startsWith('$2b$')) {
+        isValid = await bcrypt.compare(password, user.password);
+      } else {
+        isValid = user.password === password;
+        if (isValid) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          await db.query('UPDATE members SET password=$1 WHERE id=$2', [hashedPassword, memberId]);
+        }
+      }
+      
+      if (!isValid) return res.status(401).json({ error: 'Invalid credentials' });
       res.json({ success: true });
     } catch (err) {
       console.error(err);
@@ -55,8 +72,12 @@ app.prepare().then(() => {
 
   server.put('/api/member/password', auth, async (req, res) => {
     const { password } = req.body;
+    if (!password) return res.status(400).json({ error: 'Password required' });
+    
     try {
-      await db.query('UPDATE members SET password=$1 WHERE id=$2', [password, req.memberId]);
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await db.query('UPDATE members SET password=$1 WHERE id=$2', [hashedPassword, req.memberId]);
       res.json({ success: true });
     } catch (err) {
       console.error(err);
