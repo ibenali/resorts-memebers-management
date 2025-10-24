@@ -21,4 +21,12 @@ This project provides a simple web application for Sterling Resorts members buil
    ```
    This runs the Express API and Next.js frontend on `http://localhost:3000`.
 
-The database schema is not included and should contain tables for `members`, `resorts`, `feedback` and `vacation_requests`.
+The repository includes a `schema.sql` file with the PostgreSQL schema.  You can
+create the required tables using:
+
+```bash
+psql -f schema.sql
+```
+
+This will create the `members`, `resorts`, `feedback` and
+`vacation_requests` tables used by the application.
