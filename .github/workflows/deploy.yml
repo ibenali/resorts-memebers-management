@@ -1,0 +1,85 @@
+name: Deploy
+
+# Deployt nach jedem grünen CI-Lauf auf main auf den Hostinger-VPS; zusätzlich von Hand startbar.
+# Einrichtung: docs/DEPLOYMENT.md
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.RM_DOMAIN && format('https://{0}', vars.RM_DOMAIN) || '' }}
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '46.202.155.191' }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/resort-members' }}
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+      RM_DOMAIN: ${{ vars.RM_DOMAIN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Bei workflow_run genau den Commit deployen, für den CI grün war.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: SSH einrichten
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$SSH_PRIVATE_KEY" ] || [ -z "$SSH_KNOWN_HOSTS" ]; then
+            echo "::error::Secrets SSH_PRIVATE_KEY und SSH_KNOWN_HOSTS fehlen, siehe docs/DEPLOYMENT.md"
+            exit 1
+          fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CFG
+          Host server
+            HostName $DEPLOY_HOST
+            Port $DEPLOY_PORT
+            User $DEPLOY_USER
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+          CFG
+
+      - name: Code auf den Server kopieren
+        run: |
+          # shellcheck disable=SC2029
+          ssh server "mkdir -p '$DEPLOY_PATH'"
+          # Daten und Zugangsdaten auf dem Server bleiben unberührt.
+          rsync -az --delete \
+            --exclude '/.git/' --exclude '/data/' --exclude '/deploy/.env.production' \
+            --exclude 'node_modules/' --exclude '/.next/' \
+            ./ "server:$DEPLOY_PATH/"
+
+      - name: Bauen, migrieren, starten
+        run: |
+          # shellcheck disable=SC2029
+          ssh server "cd '$DEPLOY_PATH' && RM_DOMAIN='$RM_DOMAIN' sh scripts/deploy.sh"
+
+      - name: Erreichbarkeit prüfen
+        if: env.RM_DOMAIN != ''
+        run: |
+          for _ in $(seq 1 12); do
+            curl -fsS --max-time 10 "https://$RM_DOMAIN/api/health" && exit 0
+            sleep 10
+          done
+          echo "::error::https://$RM_DOMAIN/api/health antwortet nicht"
+          exit 1
