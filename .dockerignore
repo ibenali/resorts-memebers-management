@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+.next
+out
+coverage
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+data
+secrets
+docs

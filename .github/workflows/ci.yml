@@ -51,8 +51,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run db:migrate
-      - run: npm run db:seed
+      - name: Migration und Seed je zweimal (müssen idempotent sein)
+        run: npm run db:migrate && npm run db:migrate && npm run db:seed && npm run db:seed
+      - run: npm run test:db
       - run: npm run build
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
