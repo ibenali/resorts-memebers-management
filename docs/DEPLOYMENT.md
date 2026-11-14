@@ -10,6 +10,8 @@ Die App läuft auf demselben Hostinger-VPS wie quick-translator (`srv664259.hstg
 
 HTTPS übernimmt der vorhandene Caddy von quick-translator. Er lädt alle Dateien aus `/opt/caddy-sites/*.caddy`; `scripts/deploy.sh` legt dort `resort-members.caddy` an und leitet die Domain über das Docker-Netz `edge` an `resort-members-app:3000` weiter. Das Zertifikat holt Caddy automatisch von Let's Encrypt.
 
+Wichtig für Login und Sperre nach Fehlversuchen: Zwischen Internet und App steht **genau ein** Proxy (dieser Caddy). Die App liest die Client-IP aus dem letzten Eintrag von `X-Forwarded-For`; Caddy vertraut ohne `trusted_proxies` keinem eingehenden Header und setzt dort die echte Client-IP. Kein weiteres CDN oder Proxy davorschalten, ohne die App anzupassen. Das Session-Cookie ist in Produktion `Secure`, die App funktioniert deshalb nur über HTTPS (oder über `http://localhost` per SSH-Tunnel, siehe unten). `COOKIE_SECURE=false` in `deploy/.env.production` schaltet das ab, ist aber nur für Notfälle gedacht.
+
 ## Ablauf
 
 Push auf `main` → CI (Lint, Typecheck, Tests, Build) → bei Erfolg startet [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml):
