@@ -4,7 +4,11 @@ Web-App für Resort-Mitglieder: Login per Mitgliedsnummer, Resorts und Saisons a
 Feedback senden, Adresse und Passwort ändern, Urlaub anfragen.
 
 Stack: Next.js 15 (App Router, TypeScript), Tailwind CSS 4, MySQL 8 (Drizzle ORM),
-gedacht für **Hostinger Cloud Hosting** (Node.js-App). Details und Arbeitspakete: [docs/PLAN.md](docs/PLAN.md).
+betrieben auf einem **Hostinger-VPS** mit Docker unter https://resort.ieb-digital.com.
+
+Dokumentation: [docs/README.md](docs/README.md), insbesondere
+[Projektbericht](docs/PROJEKTBERICHT.md), [Notizen zum Weiterarbeiten](docs/NOTIZEN.md) und
+[Deployment](docs/DEPLOYMENT.md).
 
 ## Lokale Entwicklung
 
@@ -24,14 +28,14 @@ http://localhost:3000/api/health.
 
 ## Skripte
 
-| Befehl                        | Zweck                                               |
-| ----------------------------- | --------------------------------------------------- |
-| `npm run dev`                 | Entwicklungsserver                                  |
-| `npm run build` / `npm start` | Produktions-Build und Start (so auch auf Hostinger) |
-| `npm run lint`                | ESLint                                              |
-| `npm run typecheck`           | TypeScript-Prüfung                                  |
-| `npm test`                    | Unit-Tests (Vitest)                                 |
-| `npm run format`              | Prettier                                            |
+| Befehl                        | Zweck                       |
+| ----------------------------- | --------------------------- |
+| `npm run dev`                 | Entwicklungsserver          |
+| `npm run build` / `npm start` | Produktions-Build und Start |
+| `npm run lint`                | ESLint                      |
+| `npm run typecheck`           | TypeScript-Prüfung          |
+| `npm test`                    | Unit-Tests (Vitest)         |
+| `npm run format`              | Prettier                    |
 
 ## Datenbank
 

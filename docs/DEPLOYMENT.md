@@ -1,5 +1,7 @@
 # Deployment auf den Hostinger-VPS
 
+Produktion: https://resort.ieb-digital.com · Konten anlegen und Weiteres: [NOTIZEN.md](NOTIZEN.md#konten-in-produktion)
+
 Die App läuft auf demselben Hostinger-VPS wie quick-translator (`srv664259.hstgr.cloud`, 46.202.155.191) in eigenen Docker-Containern unter `/opt/resort-members`:
 
 | Container | Aufgabe                                                                                      |
@@ -42,7 +44,7 @@ Unter **Settings → Secrets and variables → Actions** in `ibenali/resorts-mem
 | ------------------- | ----------------- | ----------------------------------------------------------------------------------------- |
 | Secret              | `SSH_PRIVATE_KEY` | privater Deploy-Schlüssel für `deploy@46.202.155.191` (derselbe wie bei quick-translator) |
 | Secret              | `SSH_KNOWN_HOSTS` | Ausgabe von `ssh-keyscan -t ed25519 46.202.155.191`                                       |
-| Variable            | `RM_DOMAIN`       | Domain der App, z. B. `mitglieder.eib-digital.com` (ohne Angabe läuft die App nur intern) |
+| Variable            | `RM_DOMAIN`       | Domain der App, aktuell `resort.ieb-digital.com` (ohne Angabe läuft die App nur intern)   |
 | Variable (optional) | `DEPLOY_USER`     | Standard `deploy`                                                                         |
 | Variable (optional) | `DEPLOY_HOST`     | Standard `46.202.155.191`                                                                 |
 | Variable (optional) | `DEPLOY_PATH`     | Standard `/opt/resort-members`                                                            |
@@ -59,7 +61,7 @@ rm rm_deploy rm_deploy.pub
 
 ### Domain
 
-Beim DNS-Anbieter von `eib-digital.com` einen A-Eintrag für die gewählte Subdomain auf `46.202.155.191` anlegen und `RM_DOMAIN` setzen. Beim nächsten Deployment ist die App unter `https://<RM_DOMAIN>` erreichbar.
+Beim DNS-Anbieter von `ieb-digital.com` einen A-Eintrag für die gewählte Subdomain auf `46.202.155.191` anlegen und `RM_DOMAIN` setzen. Beim nächsten Deployment ist die App unter `https://<RM_DOMAIN>` erreichbar.
 
 ## Zugangsdaten
 
