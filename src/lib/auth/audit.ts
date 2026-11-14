@@ -7,7 +7,8 @@ export type AuditAction =
   | "login_locked"
   | "login_ip_blocked"
   | "logout"
-  | "password_changed";
+  | "password_changed"
+  | "address_changed";
 
 export async function audit(action: AuditAction, memberId: number | null, ip: string | null) {
   await getDb().insert(schema.auditLog).values({ action, memberId, ip });
