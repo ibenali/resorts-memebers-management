@@ -16,29 +16,30 @@ Die Mitglieder-Web-App wird von Grund auf neu gebaut und muss auf **Hostinger** 
 
 Der aktuelle Stand (`backend/`, `frontend/`, `schema.sql`) ist ein Prototyp und wird **nicht** weiterverwendet. Übernommen werden nur die fachlichen Ideen.
 
-| Bereich | Befund | Schwere |
-|---|---|---|
-| Authentifizierung | Nach dem Login wird nur die Mitglieds-ID in `localStorage` gespeichert und als Header `x-member-id` mitgeschickt. Der Server prüft nichts weiter: **jeder kann sich als beliebiges Mitglied ausgeben**, indem er den Header setzt. | Kritisch |
-| Passwörter | bcrypt ist eingebaut, aber Altbestand liegt im Klartext vor und wird erst beim Login migriert. Passwortänderung verlangt nicht das alte Passwort. | Hoch |
-| Saisons | `vacation_requests.season_id` existiert, aber es gibt **keine Tabelle `seasons`** und keine Anzeige von Saisons. Anforderung 2 ist nicht umgesetzt. | Hoch |
-| Validierung | Keine Eingabeprüfung (Datumsbereich, Pflichtfelder, Längen), kein Rate-Limiting, kein CSRF-Schutz. | Hoch |
-| Datenbank | PostgreSQL. Auf Hostinger Shared/Cloud Hosting gibt es nur **MySQL/MariaDB**. | Blocker für Hostinger |
-| Aufbau | Custom-Express-Server um Next.js 13 (`dir: '../frontend'` ist relativ zum Arbeitsverzeichnis und bricht je nach Startort). Kein Build-Skript, keine Tests, kein TypeScript. | Mittel |
-| UI | Unformatierte Rohformulare, Resort- und Saison-ID müssen von Hand eingetippt werden, keine Navigation, kein Logout. | Mittel |
+| Bereich           | Befund                                                                                                                                                                                                                             | Schwere               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Authentifizierung | Nach dem Login wird nur die Mitglieds-ID in `localStorage` gespeichert und als Header `x-member-id` mitgeschickt. Der Server prüft nichts weiter: **jeder kann sich als beliebiges Mitglied ausgeben**, indem er den Header setzt. | Kritisch              |
+| Passwörter        | bcrypt ist eingebaut, aber Altbestand liegt im Klartext vor und wird erst beim Login migriert. Passwortänderung verlangt nicht das alte Passwort.                                                                                  | Hoch                  |
+| Saisons           | `vacation_requests.season_id` existiert, aber es gibt **keine Tabelle `seasons`** und keine Anzeige von Saisons. Anforderung 2 ist nicht umgesetzt.                                                                                | Hoch                  |
+| Validierung       | Keine Eingabeprüfung (Datumsbereich, Pflichtfelder, Längen), kein Rate-Limiting, kein CSRF-Schutz.                                                                                                                                 | Hoch                  |
+| Datenbank         | PostgreSQL. Auf Hostinger Shared/Cloud Hosting gibt es nur **MySQL/MariaDB**.                                                                                                                                                      | Blocker für Hostinger |
+| Aufbau            | Custom-Express-Server um Next.js 13 (`dir: '../frontend'` ist relativ zum Arbeitsverzeichnis und bricht je nach Startort). Kein Build-Skript, keine Tests, kein TypeScript.                                                        | Mittel                |
+| UI                | Unformatierte Rohformulare, Resort- und Saison-ID müssen von Hand eingetippt werden, keine Navigation, kein Logout.                                                                                                                | Mittel                |
 
 Was wir fachlich übernehmen: die vier Kern-Entitäten (Mitglied, Resort, Feedback, Urlaubsanfrage), Login per Mitgliedsnummer, bcrypt-kompatible Hashes und die automatische Migration von Klartext-Passwörtern beim ersten Login (siehe 6.3).
 
 ## 3. Hosting-Entscheidung
 
-| Hostinger-Angebot | Node.js | Datenbank | Bewertung |
-|---|---|---|---|
-| Web-/Business-Hosting | Node.js-Apps ab Business-Plan (Next.js, Express; Node 18/20/22/24) | MySQL/MariaDB | Möglich, aber knappe Ressourcen |
-| **Cloud Hosting** (Startup/Professional/Enterprise) | Ja, gleiche Node.js-App-Funktion, mehr RAM/CPU | MySQL/MariaDB | **Empfehlung** |
-| VPS | Alles (Docker, PostgreSQL) | frei wählbar | Mehr Kontrolle, aber Server-Pflege (Updates, Backups, TLS) liegt bei uns |
+| Hostinger-Angebot                                   | Node.js                                                            | Datenbank     | Bewertung                                                                |
+| --------------------------------------------------- | ------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------ |
+| Web-/Business-Hosting                               | Node.js-Apps ab Business-Plan (Next.js, Express; Node 18/20/22/24) | MySQL/MariaDB | Möglich, aber knappe Ressourcen                                          |
+| **Cloud Hosting** (Startup/Professional/Enterprise) | Ja, gleiche Node.js-App-Funktion, mehr RAM/CPU                     | MySQL/MariaDB | **Empfehlung**                                                           |
+| VPS                                                 | Alles (Docker, PostgreSQL)                                         | frei wählbar  | Mehr Kontrolle, aber Server-Pflege (Updates, Backups, TLS) liegt bei uns |
 
 **Empfehlung: Hostinger Cloud Hosting mit Node.js-App + MySQL.** Das entspricht dem Wunsch „Cloud auf Hostinger“, Hostinger übernimmt TLS, Backups und Betriebssystem. Der Build läuft bei Hostinger aus einem Git-Repository oder einem Zip-Archiv; die App wird mit `npm run build` gebaut und mit `npm start` gestartet.
 
 Konsequenzen für den Stack:
+
 - **MySQL statt PostgreSQL.**
 - **Keine nativen Node-Module**, die beim Build kompiliert werden müssen (z. B. `bcrypt`). Wir nehmen rein-JavaScript-Pakete (`bcryptjs`), damit der Hostinger-Build nicht scheitert.
 - Ein einziger Node-Prozess (kein separater API-Server), damit es zum Hostinger-Modell „eine Node.js-App pro Website“ passt.
@@ -47,19 +48,19 @@ Falls später PostgreSQL, Hintergrundjobs oder mehrere Dienste nötig werden, is
 
 ## 4. Stack
 
-| Schicht | Wahl | Begründung |
-|---|---|---|
-| Framework | **Next.js 15 (App Router) + TypeScript** | Frontend und Backend in einer App; von Hostinger als App-Typ erkannt |
-| UI | Tailwind CSS + shadcn/ui-Komponenten | Schnell, responsiv, barrierearm |
-| Datenbank | **MySQL 8 / MariaDB** (Hostinger) | Einzige DB auf Cloud Hosting |
-| ORM / Migrationen | **Drizzle ORM** + `drizzle-kit` + `mysql2` | Reines JS, keine Binär-Engine (Prisma-Engines machen auf Shared Hosting oft Probleme), typsicher, SQL-Migrationen im Repo |
-| Validierung | Zod | Gleiche Schemas für Formulare und Server |
-| Passwort-Hashing | `bcryptjs`, Kostenfaktor 12 | Kompatibel mit bestehenden `$2b$`-Hashes, kein nativer Build |
-| Sessions | Eigene DB-Sessions mit httpOnly-Cookie | Serverseitig widerrufbar (Logout, Passwortwechsel) |
-| E-Mail (optional) | SMTP über Hostinger-Mail mit `nodemailer` | Bestätigung von Urlaubsanfragen / Feedback |
-| Tests | Vitest (Unit), Playwright (E2E) | |
-| CI | GitHub Actions: Lint, Typecheck, Tests, Build | |
-| Lokale Entwicklung | `docker compose` mit MySQL 8 | Gleiche DB wie in Produktion |
+| Schicht            | Wahl                                          | Begründung                                                                                                                |
+| ------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Framework          | **Next.js 15 (App Router) + TypeScript**      | Frontend und Backend in einer App; von Hostinger als App-Typ erkannt                                                      |
+| UI                 | Tailwind CSS + shadcn/ui-Komponenten          | Schnell, responsiv, barrierearm                                                                                           |
+| Datenbank          | **MySQL 8 / MariaDB** (Hostinger)             | Einzige DB auf Cloud Hosting                                                                                              |
+| ORM / Migrationen  | **Drizzle ORM** + `drizzle-kit` + `mysql2`    | Reines JS, keine Binär-Engine (Prisma-Engines machen auf Shared Hosting oft Probleme), typsicher, SQL-Migrationen im Repo |
+| Validierung        | Zod                                           | Gleiche Schemas für Formulare und Server                                                                                  |
+| Passwort-Hashing   | `bcryptjs`, Kostenfaktor 12                   | Kompatibel mit bestehenden `$2b$`-Hashes, kein nativer Build                                                              |
+| Sessions           | Eigene DB-Sessions mit httpOnly-Cookie        | Serverseitig widerrufbar (Logout, Passwortwechsel)                                                                        |
+| E-Mail (optional)  | SMTP über Hostinger-Mail mit `nodemailer`     | Bestätigung von Urlaubsanfragen / Feedback                                                                                |
+| Tests              | Vitest (Unit), Playwright (E2E)               |                                                                                                                           |
+| CI                 | GitHub Actions: Lint, Typecheck, Tests, Build |                                                                                                                           |
+| Lokale Entwicklung | `docker compose` mit MySQL 8                  | Gleiche DB wie in Produktion                                                                                              |
 
 ## 5. Architektur
 
@@ -79,6 +80,7 @@ MySQL (Hostinger)
 ```
 
 Prinzipien:
+
 - **Server Actions und Server Components** greifen direkt auf die DB zu. Es gibt keine öffentliche JSON-API, die man absichern müsste. Next.js prüft bei Server Actions den Origin (CSRF-Schutz).
 - Die **Mitglieds-ID kommt nie vom Client**, sondern immer aus der Session.
 - Jede Mutation: Session prüfen → Zod validieren → DB schreiben → `revalidatePath`.
@@ -86,16 +88,16 @@ Prinzipien:
 
 ### Seiten
 
-| Route | Inhalt |
-|---|---|
-| `/login` | Mitgliedsnummer + Passwort, Fehlermeldung ohne Hinweis, ob die Nummer existiert |
-| `/` (Dashboard) | Begrüßung, offene Urlaubsanfragen, Schnellzugriffe |
-| `/resorts` | Liste aller Resorts (Karte mit Bild, Ort, Kurzbeschreibung) |
+| Route             | Inhalt                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| `/login`          | Mitgliedsnummer + Passwort, Fehlermeldung ohne Hinweis, ob die Nummer existiert                |
+| `/` (Dashboard)   | Begrüßung, offene Urlaubsanfragen, Schnellzugriffe                                             |
+| `/resorts`        | Liste aller Resorts (Karte mit Bild, Ort, Kurzbeschreibung)                                    |
 | `/resorts/[slug]` | Details, Ausstattung, Kontakt, **Saisonkalender** (Haupt-, Neben-, Nebensaison mit Zeiträumen) |
-| `/urlaub` | Eigene Anfragen mit Status; „Neue Anfrage“ |
-| `/urlaub/neu` | Resort wählen → Zeitraum wählen → Saison wird automatisch ermittelt → Personenzahl, Bemerkung |
-| `/feedback` | Formular (Kategorie, optional Resort, Betreff, Text) und Liste eigener Feedbacks |
-| `/profil` | Adresse ändern; Passwort ändern (altes Passwort erforderlich) |
+| `/urlaub`         | Eigene Anfragen mit Status; „Neue Anfrage“                                                     |
+| `/urlaub/neu`     | Resort wählen → Zeitraum wählen → Saison wird automatisch ermittelt → Personenzahl, Bemerkung  |
+| `/feedback`       | Formular (Kategorie, optional Resort, Betreff, Text) und Liste eigener Feedbacks               |
+| `/profil`         | Adresse ändern; Passwort ändern (altes Passwort erforderlich)                                  |
 
 ## 6. Datenmodell (MySQL)
 
@@ -152,6 +154,7 @@ audit_log
 ```
 
 Geschäftsregeln für Urlaubsanfragen:
+
 - `start_date < end_date`, Start nicht in der Vergangenheit, Dauer 1–28 Nächte (konfigurierbar).
 - Die Saison wird serverseitig aus Resort + Startdatum ermittelt, nicht vom Client übernommen.
 - Ein Mitglied kann keine zwei überlappenden offenen Anfragen haben.
@@ -173,6 +176,7 @@ Geschäftsregeln für Urlaubsanfragen:
 ## 8. Deployment auf Hostinger
 
 Einmalig im hPanel:
+
 1. Cloud-Hosting-Plan und Domain/Subdomain wählen (z. B. `mitglieder.<domain>`).
 2. **MySQL-Datenbank anlegen** (Name, Benutzer, Passwort notieren). Für Migrationen von außen „Remote MySQL“ für die CI-IP freigeben, oder Migrationen beim App-Start laufen lassen (siehe unten).
 3. **Node.js-App anlegen:** Quelle = GitHub-Repository `ibenali/resorts-memebers-management`, Branch `main`, Node 22, App-Typ Next.js, Build `npm run build`, Start `npm start`.
@@ -180,6 +184,7 @@ Einmalig im hPanel:
 5. SSL aktivieren (kostenlos im hPanel).
 
 Laufender Betrieb:
+
 - Push auf `main` → Hostinger baut automatisch neu (Git-Deploy). Alternativ manueller Build aus Zip über die Hostinger-API.
 - **Migrationen:** `npm run db:migrate` (drizzle-kit) läuft als Teil von `npm start` vor dem Server-Start (`prestart`-Skript), idempotent.
 - **Seed:** `npm run db:seed` einmalig für Resorts, Saisons und Test-Mitglieder (nur Staging).
@@ -192,18 +197,18 @@ Achtung: Ein Hostinger-Build überschreibt das gesamte Website-Verzeichnis. Die 
 
 Jedes Paket ist einzeln umsetzbar, endet in einem eigenen PR und kann ein eigener Thread werden.
 
-| # | Paket | Abhängig von | Ergebnis („fertig wenn…“) |
-|---|---|---|---|
-| **WP1** | **Projekt-Grundgerüst** | – | Alter Code entfernt (bleibt in Git-Historie); Next.js 15 + TS + Tailwind + ESLint/Prettier + Vitest; `docker-compose.yml` mit MySQL; GitHub-Actions-CI (Lint, Typecheck, Test, Build) grün; Layout mit Navigation; `/api/health` |
-| **WP2** | **Datenbank-Schema & Seed** | WP1 | Drizzle-Schema aller Tabellen aus Kap. 6, erste Migration, Seed-Skript (3 Resorts mit Saisons, 2 Test-Mitglieder), `db:migrate`/`db:seed`-Skripte, Doku in README |
-| **WP3** | **Login & Sessions** | WP2 | Login per Mitgliedsnummer, Logout, DB-Sessions, `middleware.ts`-Schutz, Sperre nach Fehlversuchen, Audit-Log, erzwungener Passwortwechsel bei `must_change_password`; Unit- und E2E-Tests |
-| **WP4** | **Resorts & Saisons** | WP3 | `/resorts` und `/resorts/[slug]` mit Ausstattung, Kontakt und Saisonkalender; responsiv |
-| **WP5** | **Feedback** | WP3 | Formular mit Kategorie/Resort, Validierung, Liste eigener Feedbacks, optional Bestätigungs-Mail |
-| **WP6** | **Profil: Adresse & Passwort** | WP3 | Adresse ändern (strukturierte Felder), Passwort ändern mit altem Passwort und Richtlinie, andere Sessions werden beendet |
-| **WP7** | **Urlaubsanfragen** | WP3, WP4 | Anfrage-Assistent (Resort, Zeitraum, Personen), serverseitige Saisonermittlung, Regeln aus Kap. 6, eigene Anfragen mit Status, Stornieren |
-| **WP8** | **Hostinger-Deployment** | WP1 (Start), final nach WP3–WP7 | Staging- und Produktions-App im hPanel, DB angelegt, Env-Variablen gesetzt, Git-Auto-Deploy, Migration beim Start, Deploy-Anleitung `docs/DEPLOYMENT.md`, Smoke-Test |
-| **WP9** | **Datenübernahme Altbestand** (optional) | WP2 | Import-Skript CSV/Postgres → MySQL, Klartext-Passwörter werden gehasht, Bericht über übernommene Datensätze |
-| **WP10** | **Admin-Bereich** (optional, nicht in den Anforderungen) | WP3 | Rolle `admin`; Resorts/Saisons pflegen, Urlaubsanfragen genehmigen/ablehnen, Feedback lesen |
+| #        | Paket                                                    | Abhängig von                    | Ergebnis („fertig wenn…“)                                                                                                                                                                                                        |
+| -------- | -------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **WP1**  | **Projekt-Grundgerüst**                                  | –                               | Alter Code entfernt (bleibt in Git-Historie); Next.js 15 + TS + Tailwind + ESLint/Prettier + Vitest; `docker-compose.yml` mit MySQL; GitHub-Actions-CI (Lint, Typecheck, Test, Build) grün; Layout mit Navigation; `/api/health` |
+| **WP2**  | **Datenbank-Schema & Seed**                              | WP1                             | Drizzle-Schema aller Tabellen aus Kap. 6, erste Migration, Seed-Skript (3 Resorts mit Saisons, 2 Test-Mitglieder), `db:migrate`/`db:seed`-Skripte, Doku in README                                                                |
+| **WP3**  | **Login & Sessions**                                     | WP2                             | Login per Mitgliedsnummer, Logout, DB-Sessions, `middleware.ts`-Schutz, Sperre nach Fehlversuchen, Audit-Log, erzwungener Passwortwechsel bei `must_change_password`; Unit- und E2E-Tests                                        |
+| **WP4**  | **Resorts & Saisons**                                    | WP3                             | `/resorts` und `/resorts/[slug]` mit Ausstattung, Kontakt und Saisonkalender; responsiv                                                                                                                                          |
+| **WP5**  | **Feedback**                                             | WP3                             | Formular mit Kategorie/Resort, Validierung, Liste eigener Feedbacks, optional Bestätigungs-Mail                                                                                                                                  |
+| **WP6**  | **Profil: Adresse & Passwort**                           | WP3                             | Adresse ändern (strukturierte Felder), Passwort ändern mit altem Passwort und Richtlinie, andere Sessions werden beendet                                                                                                         |
+| **WP7**  | **Urlaubsanfragen**                                      | WP3, WP4                        | Anfrage-Assistent (Resort, Zeitraum, Personen), serverseitige Saisonermittlung, Regeln aus Kap. 6, eigene Anfragen mit Status, Stornieren                                                                                        |
+| **WP8**  | **Hostinger-Deployment**                                 | WP1 (Start), final nach WP3–WP7 | Staging- und Produktions-App im hPanel, DB angelegt, Env-Variablen gesetzt, Git-Auto-Deploy, Migration beim Start, Deploy-Anleitung `docs/DEPLOYMENT.md`, Smoke-Test                                                             |
+| **WP9**  | **Datenübernahme Altbestand** (optional)                 | WP2                             | Import-Skript CSV/Postgres → MySQL, Klartext-Passwörter werden gehasht, Bericht über übernommene Datensätze                                                                                                                      |
+| **WP10** | **Admin-Bereich** (optional, nicht in den Anforderungen) | WP3                             | Rolle `admin`; Resorts/Saisons pflegen, Urlaubsanfragen genehmigen/ablehnen, Feedback lesen                                                                                                                                      |
 
 Reihenfolge und Parallelisierung:
 

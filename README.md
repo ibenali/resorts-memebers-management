@@ -1,32 +1,37 @@
-# Sterling Resorts Members Management
+# Resort-Mitgliederportal
 
-This project provides a simple web application for Sterling Resorts members built with **Node.js**, **Next.js** and **PostgreSQL**.
+Web-App für Resort-Mitglieder: Login per Mitgliedsnummer, Resorts und Saisons ansehen,
+Feedback senden, Adresse und Passwort ändern, Urlaub anfragen.
 
-## Features
-- Member login using member ID and password.
-- View resort details including seasons and other information.
-- Submit feedback.
-- Update address and change password.
-- Request vacations.
+Stack: Next.js 15 (App Router, TypeScript), Tailwind CSS 4, MySQL 8 (Drizzle ORM),
+gedacht für **Hostinger Cloud Hosting** (Node.js-App). Details und Arbeitspakete: [docs/PLAN.md](docs/PLAN.md).
 
-## Development
-1. Install dependencies (requires internet access):
-   ```bash
-   npm install
-   ```
-2. Set the `DATABASE_URL` environment variable to point to your PostgreSQL instance.
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-   This runs the Express API and Next.js frontend on `http://localhost:3000`.
+## Lokale Entwicklung
 
-The repository includes a `schema.sql` file with the PostgreSQL schema.  You can
-create the required tables using:
+Voraussetzungen: Node.js 22 (siehe `.nvmrc`), Docker.
 
 ```bash
-psql -f schema.sql
+cp .env.example .env
+docker compose up -d mysql
+npm install
+npm run dev
 ```
 
-This will create the `members`, `resorts`, `feedback` and
-`vacation_requests` tables used by the application.
+Die App läuft dann unter http://localhost:3000, der Health-Check unter
+http://localhost:3000/api/health.
+
+## Skripte
+
+| Befehl                        | Zweck                                               |
+| ----------------------------- | --------------------------------------------------- |
+| `npm run dev`                 | Entwicklungsserver                                  |
+| `npm run build` / `npm start` | Produktions-Build und Start (so auch auf Hostinger) |
+| `npm run lint`                | ESLint                                              |
+| `npm run typecheck`           | TypeScript-Prüfung                                  |
+| `npm test`                    | Unit-Tests (Vitest)                                 |
+| `npm run format`              | Prettier                                            |
+
+## Sprache
+
+Die Oberfläche ist deutsch. Alle Texte liegen in `src/lib/i18n/de.ts`, damit weitere
+Sprachen später ergänzt werden können.
