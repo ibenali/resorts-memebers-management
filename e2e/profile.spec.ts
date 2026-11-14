@@ -4,7 +4,8 @@ import { ANNA, formAlert, loginAs, resetMembers, withDb } from "./helpers";
 
 // Seed-Passwort und -Adresse von Anna herstellen (auch für nachfolgende Specs).
 async function restoreAnna() {
-  const hash = await bcrypt.hash(ANNA.password, 4);
+  // Kosten 12 wie im Seed, sonst verfälscht der schnellere Hash den Timing-Test in qa-security.
+  const hash = await bcrypt.hash(ANNA.password, 12);
   await withDb((c) =>
     c.query(
       `UPDATE members SET password_hash = ?, street = 'Musterstraße 1', postal_code = '10115',

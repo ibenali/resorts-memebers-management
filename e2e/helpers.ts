@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import { createHash } from "node:crypto";
+import { expect, type BrowserContext, type Cookie, type Page } from "@playwright/test";
 
 export { resetMembers, withDb } from "./db";
 
@@ -15,3 +16,13 @@ export async function loginAs(page: Page, memberNo: string, password: string) {
 
 /** Meldungen im Formular (nicht Next.js' Route-Announcer, der ebenfalls role=alert hat). */
 export const formAlert = (page: Page) => page.locator("main form").getByRole("alert");
+
+/** SHA-256 (hex), so wie Session-Tokens in der DB stehen. */
+export const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
+
+/** Das Session-Cookie des Kontexts (Name aus authConfig: "session"). */
+export async function sessionCookie(context: BrowserContext): Promise<Cookie> {
+  const cookie = (await context.cookies()).find((c) => c.name === "session");
+  expect(cookie, "Session-Cookie fehlt").toBeDefined();
+  return cookie!;
+}
