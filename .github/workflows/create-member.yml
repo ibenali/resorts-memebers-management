@@ -1,0 +1,92 @@
+name: Konto anlegen
+
+# Legt in Produktion ein Konto an oder setzt dessen Passwort zurück. Nur von Hand startbar.
+# Startpasswort als Eingabe (maskiert im Log). Das Konto muss es beim ersten Login ändern.
+on:
+  workflow_dispatch:
+    inputs:
+      member_no:
+        description: Mitgliedsnummer (z. B. M200001)
+        required: true
+      first_name:
+        description: Vorname
+        required: true
+      last_name:
+        description: Nachname
+        required: true
+      password:
+        description: Startpasswort (10 bis 128 Zeichen, wird beim ersten Login geändert)
+        required: true
+      role:
+        description: Rolle
+        type: choice
+        options: [member, admin]
+        default: member
+      demo_resorts:
+        description: Beispiel-Resorts mit Saisons anlegen (ohne Test-Konten)
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  create:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '46.202.155.191' }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/resort-members' }}
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+      MEMBER_NO: ${{ inputs.member_no }}
+      FIRST_NAME: ${{ inputs.first_name }}
+      LAST_NAME: ${{ inputs.last_name }}
+      ROLE: ${{ inputs.role }}
+    steps:
+      - name: Eingaben prüfen
+        env:
+          PW: ${{ inputs.password }}
+        run: |
+          echo "::add-mask::$PW"
+          printf '%s' "$MEMBER_NO" | grep -Eq '^[A-Z0-9]{3,20}$' || { echo "::error::Ungültige Mitgliedsnummer"; exit 1; }
+          for v in "$FIRST_NAME" "$LAST_NAME"; do
+            printf '%s' "$v" | grep -Eq "^[[:alpha:] .-]{1,100}$" || { echo "::error::Ungültiger Name"; exit 1; }
+          done
+
+      - name: SSH einrichten
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CFG
+          Host server
+            HostName $DEPLOY_HOST
+            Port $DEPLOY_PORT
+            User $DEPLOY_USER
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          CFG
+
+      - name: Beispiel-Resorts anlegen
+        if: inputs.demo_resorts
+        run: |
+          # shellcheck disable=SC2029
+          ssh server "cd '$DEPLOY_PATH' && docker compose -f deploy/compose.yaml --profile tools run --rm -T -e ALLOW_SEED=1 -e SEED_SKIP_MEMBERS=1 migrate npx tsx scripts/seed.ts"
+
+      - name: Konto anlegen
+        env:
+          PW: ${{ inputs.password }}
+        run: |
+          # shellcheck disable=SC2029
+          printf '%s\n' "$PW" | ssh server "cd '$DEPLOY_PATH' && docker compose -f deploy/compose.yaml --profile tools run --rm -T migrate node scripts/create-member.mjs '$MEMBER_NO' '$FIRST_NAME' '$LAST_NAME' '$ROLE'"

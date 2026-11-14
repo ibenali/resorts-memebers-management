@@ -43,7 +43,8 @@ async function main() {
           .values(expandSeasons(seasonDefs, years).map((s) => ({ ...s, resortId: row.id })));
       }
 
-      for (const m of seedMembers) {
+      // SEED_SKIP_MEMBERS=1: nur Beispiel-Resorts, keine Test-Konten (z. B. für Produktion).
+      for (const m of process.env.SEED_SKIP_MEMBERS === "1" ? [] : seedMembers) {
         const { password, ...member } = m;
         const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
         const values = { ...member, passwordHash, failedLogins: 0, lockedUntil: null };

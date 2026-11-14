@@ -41,7 +41,8 @@ docker network create edge > /dev/null 2>&1 || true
 
 # 3. Bauen, migrieren, starten.
 $COMPOSE pull --quiet --ignore-buildable 2>/dev/null || true
-$COMPOSE build --pull
+# --profile tools: auch das migrate-Image neu bauen, sonst laufen neue Migrationen nie.
+$COMPOSE --profile tools build --pull
 $COMPOSE up -d db
 $COMPOSE run --rm migrate
 $COMPOSE up -d --remove-orphans app
