@@ -30,6 +30,9 @@ DATABASE_URL=mysql://resort:$db_pw@db:3306/resort_members
 SESSION_SECRET=$(rnd)
 ENV
 fi
+# App ist nur über Caddy (überschreibt X-Forwarded-For) und 127.0.0.1 erreichbar,
+# daher darf sie den Proxy-Headern für das Login-IP-Limit vertrauen.
+grep -q '^TRUST_PROXY=' "$ENV_FILE" || echo 'TRUST_PROXY=1' >> "$ENV_FILE"
 chmod 600 "$ENV_FILE"
 mkdir -p data/mysql
 
