@@ -79,6 +79,39 @@ export const de = {
     high: "Zwischensaison",
     low: "Nebensaison",
   },
+  feedback: {
+    title: "Feedback",
+    intro: "Lob, Kritik oder Anregungen? Wir freuen uns über Ihre Rückmeldung.",
+    formTitle: "Neues Feedback",
+    category: "Kategorie",
+    resort: "Resort (optional)",
+    noResort: "Kein bestimmtes Resort",
+    subject: "Betreff",
+    message: "Ihre Nachricht",
+    submit: "Feedback senden",
+    success: "Vielen Dank! Ihr Feedback ist bei uns angekommen.",
+    listTitle: "Ihr bisheriges Feedback",
+    empty: "Sie haben noch kein Feedback gesendet.",
+    errors: {
+      invalid:
+        "Bitte prüfen Sie Ihre Eingaben: Betreff mindestens 3, Nachricht mindestens 10 Zeichen.",
+      rate_limited:
+        "Sie haben in der letzten Stunde schon sehr viel Feedback gesendet. Bitte später erneut.",
+      resort: "Das gewählte Resort ist nicht verfügbar.",
+    },
+    categories: {
+      general: "Allgemein",
+      resort: "Resort / Aufenthalt",
+      booking: "Buchung / Urlaubsanfrage",
+      website: "Mitgliederportal",
+      other: "Sonstiges",
+    },
+    statuses: {
+      new: "Eingegangen",
+      read: "Gelesen",
+      answered: "Beantwortet",
+    },
+  },
   common: {
     comingSoon: "Diese Seite wird gerade gebaut.",
   },
