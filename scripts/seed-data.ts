@@ -1,4 +1,4 @@
-import type { SeasonType } from "../src/lib/db/schema";
+import type { MemberRole, SeasonType } from "../src/lib/db/schema";
 
 type SeedSeason = { name: string; type: SeasonType; start: string; end: string };
 
@@ -87,6 +87,7 @@ export type SeedMember = {
   email: string;
   password: string;
   mustChangePassword: boolean;
+  role?: MemberRole;
   street: string;
   postalCode: string;
   city: string;
@@ -118,6 +119,19 @@ export const seedMembers: SeedMember[] = [
     street: "Testweg 5",
     postalCode: "80331",
     city: "München",
+    country: "DE",
+  },
+  {
+    memberNo: "A000001",
+    firstName: "Portal",
+    lastName: "Verwaltung",
+    email: "verwaltung@example.com",
+    password: "Verwaltung-2026-Test",
+    mustChangePassword: false,
+    role: "admin",
+    street: "Hauptstraße 1",
+    postalCode: "88131",
+    city: "Lindau",
     country: "DE",
   },
 ];

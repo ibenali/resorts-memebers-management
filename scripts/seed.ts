@@ -70,7 +70,7 @@ async function main() {
         ),
       );
     console.log(
-      `Seed fertig: ${resortCount.length} Resorts mit Saisons für ${years.join("/")}, ${seedMembers.length} Test-Mitglieder.`,
+      `Seed fertig: ${resortCount.length} Resorts mit Saisons für ${years.join("/")}, ${seedMembers.length} Test-Konten (inkl. Admin).`,
     );
   } finally {
     await connection.end();

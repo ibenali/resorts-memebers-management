@@ -71,6 +71,18 @@ Alle Zeitstempel in der Datenbank sind UTC (jede Verbindung setzt `time_zone = '
   erreichbar ist. Ohne die Variable greift das IP-Limit nicht, die Kontosperre schon.
 - `COOKIE_SECURE=false` schaltet `Secure` ab, falls die App ohne HTTPS getestet wird.
 
+## Verwaltung (Admin)
+
+Mitglieder mit `role = 'admin'` sehen im Kopfbereich „Verwaltung“ (`/admin`):
+
+- Urlaubsanfragen bestätigen oder ablehnen (nur Status „In Prüfung“)
+- Feedback lesen, als gelesen/beantwortet markieren, per E-Mail antworten
+- Resorts anlegen, bearbeiten, deaktivieren; Saisons hinzufügen (ohne Überschneidung) und löschen
+
+Für alle anderen liefert `/admin` eine 404-Seite. Jede Admin-Seite und -Action ruft
+`requireAdmin()` selbst auf, alle Änderungen landen im `audit_log` (`admin_*`).
+Einen Admin anlegen: `UPDATE members SET role = 'admin' WHERE member_no = '…';`
+
 ## Sprache
 
 Die Oberfläche ist deutsch. Alle Texte liegen in `src/lib/i18n/de.ts`, damit weitere

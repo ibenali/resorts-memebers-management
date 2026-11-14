@@ -22,3 +22,11 @@ export function groupSeasonsByYear<T extends SeasonLike>(seasons: T[]): [number,
   }
   return [...byYear.entries()].sort(([a], [b]) => a - b);
 }
+
+/** Überschneiden sich zwei Saisons? Start- und Enddatum sind inklusive. */
+export function seasonsOverlap(
+  a: { startDate: string; endDate: string },
+  b: { startDate: string; endDate: string },
+): boolean {
+  return a.startDate <= b.endDate && b.startDate <= a.endDate;
+}

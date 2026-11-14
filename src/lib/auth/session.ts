@@ -3,6 +3,7 @@ import { and, eq, lt, ne } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { getDb, schema } from "@/lib/db";
+import type { MemberRole } from "@/lib/db/schema";
 import { authConfig } from "./config";
 import { initialExpiry, isSessionValid, slidingExpiry } from "./session-policy";
 import { generateSessionToken, hashSessionToken } from "./tokens";
@@ -44,6 +45,7 @@ export type CurrentSession = {
     firstName: string;
     lastName: string;
     mustChangePassword: boolean;
+    role: MemberRole;
   };
 };
 
@@ -68,6 +70,7 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
       firstName: schema.members.firstName,
       lastName: schema.members.lastName,
       mustChangePassword: schema.members.mustChangePassword,
+      role: schema.members.role,
     })
     .from(schema.sessions)
     .innerJoin(schema.members, eq(schema.members.id, schema.sessions.memberId))
@@ -97,6 +100,7 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
       firstName: row.firstName,
       lastName: row.lastName,
       mustChangePassword: row.mustChangePassword,
+      role: row.role,
     },
   };
 });

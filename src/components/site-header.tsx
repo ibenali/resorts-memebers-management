@@ -2,7 +2,9 @@ import Link from "next/link";
 import { logoutAction } from "@/lib/auth/actions";
 import { getMessages } from "@/lib/i18n";
 
-export function SiteHeader({ memberName, memberNo }: { memberName: string; memberNo: string }) {
+type Props = { memberName: string; memberNo: string; isAdmin?: boolean };
+
+export function SiteHeader({ memberName, memberNo, isAdmin = false }: Props) {
   const t = getMessages();
   const links = [
     { href: "/", label: t.nav.dashboard },
@@ -10,6 +12,7 @@ export function SiteHeader({ memberName, memberNo }: { memberName: string; membe
     { href: "/urlaub", label: t.nav.vacation },
     { href: "/feedback", label: t.nav.feedback },
     { href: "/profil", label: t.nav.profile },
+    ...(isAdmin ? [{ href: "/admin", label: t.admin.nav }] : []),
   ];
 
   return (
