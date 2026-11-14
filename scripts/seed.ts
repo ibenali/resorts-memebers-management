@@ -2,7 +2,7 @@
 // Idempotent: vorhandene Resorts/Mitglieder werden über slug bzw. member_no
 // aktualisiert, Saisons der Seed-Resorts werden neu geschrieben.
 import bcrypt from "bcryptjs";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import * as schema from "../src/lib/db/schema";
@@ -17,7 +17,9 @@ async function main() {
     throw new Error("Seed in Produktion verweigert. Zum Erzwingen ALLOW_SEED=1 setzen.");
   }
 
-  const connection = await mysql.createConnection({ uri: url });
+  const connection = await mysql.createConnection({ uri: url, timezone: "Z" });
+  await connection.query("SET time_zone = '+00:00'");
+  const resetPasswords = process.env.SEED_RESET_PASSWORDS === "1";
   const db = drizzle(connection, { schema, mode: "default" });
 
   const thisYear = new Date().getFullYear();
@@ -45,10 +47,16 @@ async function main() {
         const { password, ...member } = m;
         const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
         const values = { ...member, passwordHash, failedLogins: 0, lockedUntil: null };
+        // Vorhandene Test-Konten bleiben unverändert (z. B. ein geändertes Passwort),
+        // außer SEED_RESET_PASSWORDS=1 setzt sie auf den Seed-Stand zurück.
         await tx
           .insert(schema.members)
           .values(values)
-          .onDuplicateKeyUpdate({ set: { ...values, memberNo: undefined } });
+          .onDuplicateKeyUpdate({
+            set: resetPasswords
+              ? { ...values, memberNo: undefined }
+              : { memberNo: sql`${schema.members.memberNo}` },
+          });
       }
     });
 

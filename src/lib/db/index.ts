@@ -23,6 +23,11 @@ function getPool(): mysql.Pool {
     dateStrings: ["DATE"],
     timezone: "Z",
   });
+  // DB-Sitzung auf UTC stellen, damit CURRENT_TIMESTAMP-Defaults und Vergleiche mit
+  // JS-Dates (die mysql2 als UTC sendet) zusammenpassen, egal wie der Server eingestellt ist.
+  globalForDb.pool.pool.on("connection", (conn) => {
+    conn.query("SET time_zone = '+00:00'");
+  });
   return globalForDb.pool;
 }
 
