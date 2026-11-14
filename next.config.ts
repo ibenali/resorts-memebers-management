@@ -26,7 +26,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // Für das Docker-Deployment (WP8): eigenständiger Server unter .next/standalone.
+  // Eigenständiger Server-Build für das Docker-Image auf dem VPS (siehe Dockerfile).
   output: "standalone",
   poweredByHeader: false,
   async headers() {
