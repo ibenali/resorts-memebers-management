@@ -1,6 +1,6 @@
 # Neubau-Plan: Resort-Mitgliederverwaltung
 
-Stand: 14.11.2026 · Status: Entwurf zur Freigabe
+Stand: 14.11.2026 · Status: umgesetzt (WP1–WP8, WP10). Abweichung: Betrieb auf dem Hostinger-VPS statt Cloud Hosting, siehe [PROJEKTBERICHT.md](PROJEKTBERICHT.md) und [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## 1. Ziel
 
