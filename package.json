@@ -20,7 +20,8 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "tsx scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:db": "vitest run --config vitest.db.config.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
