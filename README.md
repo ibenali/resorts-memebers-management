@@ -55,6 +55,22 @@ werden nicht überschrieben; `SEED_RESET_PASSWORDS=1` setzt sie auf den Seed-Sta
 
 Alle Zeitstempel in der Datenbank sind UTC (jede Verbindung setzt `time_zone = '+00:00'`).
 
+## Anmeldung und Sessions
+
+- Login mit Mitgliedsnummer und Passwort (`/login`), Logout im Kopfbereich.
+- Sessions liegen in der Tabelle `sessions` (nur SHA-256 des Cookie-Tokens), Cookie `session`
+  ist `HttpOnly`, `SameSite=Lax` und in Produktion `Secure`. Laufzeit 7 Tage gleitend, maximal 30 Tage.
+- Nach 5 Fehlversuchen ist das Konto 15 Minuten gesperrt; zusätzlich max. 20 Fehlversuche
+  pro IP in 15 Minuten. Alle Anmeldeereignisse landen in `audit_log`.
+- Konten mit `must_change_password` landen nach dem Login auf `/passwort-aendern`.
+- `src/middleware.ts` leitet ohne Cookie zum Login. Die echte Prüfung macht
+  `requireMember()` aus `src/lib/auth/guard.ts`: **jede neue Seite und Server Action unter
+  `(member)` muss es selbst aufrufen** und Daten nur mit `member.id` aus der Session laden.
+- Die Client-IP wird nur mit `TRUST_PROXY=1` aus `X-Forwarded-For` (letzter Eintrag, genau ein
+  Reverse Proxy davor) gelesen. Setzen Sie das nur, wenn die App ausschließlich über den Proxy
+  erreichbar ist. Ohne die Variable greift das IP-Limit nicht, die Kontosperre schon.
+- `COOKIE_SECURE=false` schaltet `Secure` ab, falls die App ohne HTTPS getestet wird.
+
 ## Sprache
 
 Die Oberfläche ist deutsch. Alle Texte liegen in `src/lib/i18n/de.ts`, damit weitere
