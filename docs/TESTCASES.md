@@ -55,9 +55,9 @@ quer über alle Pakete liegen in `e2e/qa-security.spec.ts`, DB-Regeln in
 - IDOR: Storno mit manipulierter ID einer fremden Anfrage ändert nichts.
 - Fremde Anfragen sind nicht sichtbar.
 
-## Bekannte Befunde
+## Gegen Staging/Produktion
 
-- **X-Forwarded-For**: Ohne Reverse Proxy kann ein Client seine IP frei wählen und das
-  IP-Limit umgehen (`clientIpFrom` nimmt den letzten XFF-Eintrag). Sicher nur, wenn der
-  Proxy XFF überschreibt und der Node-Port nicht öffentlich erreichbar ist. Test läuft als
-  erwarteter Fehler, mit `E2E_BEHIND_PROXY=1` gegen Staging muss er grün sein.
+IP-Limit und XFF-Spoofing lassen sich nur hinter dem Proxy prüfen (`TRUST_PROXY=1`),
+mit `E2E_BEHIND_PROXY=1` gegen die Staging-URL (Lauf folgt nach dem Deployment).
+Lokal und in der CI ist das IP-Limit bewusst aus; dort prüft der Test nur, dass gefälschte
+X-Forwarded-For-Werte ignoriert werden.

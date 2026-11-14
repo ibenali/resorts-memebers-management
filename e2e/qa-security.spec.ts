@@ -257,9 +257,15 @@ test.describe("Sessions", () => {
 });
 
 test.describe("Brute-Force", () => {
+  // Das IP-Limit wertet X-Forwarded-For nur mit TRUST_PROXY=1 aus (App hinter Caddy).
+  // Lokal und in der CI gibt es keinen Proxy, dort ist das IP-Limit bewusst aus.
+  // Gegen Staging/Produktion: E2E_BEHIND_PROXY=1 E2E_BASE_URL=https://… npm run test:e2e
+  const behindProxy = Boolean(process.env.E2E_BEHIND_PROXY);
+
   test("Nach 20 Fehlversuchen pro IP wird auch ein korrektes Login abgewiesen", async ({
     page,
   }) => {
+    test.skip(!behindProxy, "IP-Limit nur hinter Proxy (TRUST_PROXY=1) aktiv");
     for (let i = 0; i < 20; i++) {
       await submitLogin(page, `M9${String(i).padStart(5, "0")}`, "falsch-falsch");
       await expect(formAlert(page)).toBeVisible();
@@ -269,11 +275,26 @@ test.describe("Brute-Force", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("Gefälschtes X-Forwarded-For umgeht das IP-Limit nicht", async ({ page }) => {
-    // Bekannte Lücke: Ohne Reverse Proxy nimmt clientIpFrom() den letzten XFF-Eintrag,
-    // den dann der Client selbst setzt. Hinter Caddy (überschreibt XFF) ist es sicher.
-    // Gegen Staging/Produktion mit E2E_BEHIND_PROXY=1 muss der Test grün sein.
-    test.fail(!process.env.E2E_BEHIND_PROXY, "App vertraut X-Forwarded-For ohne Proxy");
+  test("Gefälschtes X-Forwarded-For wird ohne vertrauten Proxy ignoriert", async ({ page }) => {
+    test.skip(behindProxy, "prüft die Konfiguration ohne Proxy");
+    for (let i = 0; i < 3; i++) {
+      await page.setExtraHTTPHeaders({ "x-forwarded-for": `203.0.113.${i + 1}` });
+      await submitLogin(page, `M8${String(i).padStart(5, "0")}`, "falsch-falsch");
+      await expect(formAlert(page)).toBeVisible();
+    }
+    const ips = await withDb(async (c) => {
+      const [rows] = await c.query(
+        "SELECT DISTINCT ip FROM audit_log WHERE action = 'login_failed'",
+      );
+      return (rows as { ip: string | null }[]).map((r) => r.ip);
+    });
+    expect(ips).toEqual([null]);
+  });
+
+  test("Gefälschtes X-Forwarded-For umgeht das IP-Limit hinter dem Proxy nicht", async ({
+    page,
+  }) => {
+    test.skip(!behindProxy, "nur gegen eine Umgebung mit Proxy");
     for (let i = 0; i < 20; i++) {
       await page.setExtraHTTPHeaders({ "x-forwarded-for": `203.0.113.${i + 1}` });
       await submitLogin(page, `M8${String(i).padStart(5, "0")}`, "falsch-falsch");
