@@ -50,7 +50,10 @@ Nach `npm run db:seed`:
 | `M100001`       | `Urlaub-2026-Test`  | normales Konto                         |
 | `M100002`       | `Erstpasswort-2026` | muss Passwort beim ersten Login ändern |
 
-Der Seed verweigert `NODE_ENV=production`, außer mit `ALLOW_SEED=1`.
+Der Seed verweigert `NODE_ENV=production`, außer mit `ALLOW_SEED=1`. Bestehende Test-Konten
+werden nicht überschrieben; `SEED_RESET_PASSWORDS=1` setzt sie auf den Seed-Stand zurück.
+
+Alle Zeitstempel in der Datenbank sind UTC (jede Verbindung setzt `time_zone = '+00:00'`).
 
 ## Anmeldung und Sessions
 
@@ -63,7 +66,9 @@ Der Seed verweigert `NODE_ENV=production`, außer mit `ALLOW_SEED=1`.
 - `src/middleware.ts` leitet ohne Cookie zum Login. Die echte Prüfung macht
   `requireMember()` aus `src/lib/auth/guard.ts`: **jede neue Seite und Server Action unter
   `(member)` muss es selbst aufrufen** und Daten nur mit `member.id` aus der Session laden.
-- Die Client-IP ist der letzte Eintrag von `X-Forwarded-For` (genau ein Reverse Proxy davor).
+- Die Client-IP wird nur mit `TRUST_PROXY=1` aus `X-Forwarded-For` (letzter Eintrag, genau ein
+  Reverse Proxy davor) gelesen. Setzen Sie das nur, wenn die App ausschließlich über den Proxy
+  erreichbar ist. Ohne die Variable greift das IP-Limit nicht, die Kontosperre schon.
 - `COOKIE_SECURE=false` schaltet `Secure` ab, falls die App ohne HTTPS getestet wird.
 
 ## Sprache

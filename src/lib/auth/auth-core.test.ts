@@ -106,12 +106,17 @@ describe("Rücksprungziel", () => {
 });
 
 describe("Client-IP", () => {
-  it("nimmt den vom Proxy angehängten letzten X-Forwarded-For-Eintrag", () => {
-    const h = new Headers({ "x-forwarded-for": "1.1.1.1, 203.0.113.7" });
-    expect(clientIpFrom(h)).toBe("203.0.113.7");
+  const spoofed = new Headers({ "x-forwarded-for": "1.1.1.1, 203.0.113.7" });
+
+  it("ignoriert Proxy-Header ohne TRUST_PROXY (fälschbar)", () => {
+    expect(clientIpFrom(spoofed, false)).toBeNull();
+    expect(clientIpFrom(new Headers({ "x-real-ip": "198.51.100.2" }), false)).toBeNull();
+  });
+  it("nimmt hinter vertrauenswürdigem Proxy den letzten X-Forwarded-For-Eintrag", () => {
+    expect(clientIpFrom(spoofed, true)).toBe("203.0.113.7");
   });
   it("fällt auf X-Real-IP zurück oder null", () => {
-    expect(clientIpFrom(new Headers({ "x-real-ip": "198.51.100.2" }))).toBe("198.51.100.2");
-    expect(clientIpFrom(new Headers())).toBeNull();
+    expect(clientIpFrom(new Headers({ "x-real-ip": "198.51.100.2" }), true)).toBe("198.51.100.2");
+    expect(clientIpFrom(new Headers(), true)).toBeNull();
   });
 });
