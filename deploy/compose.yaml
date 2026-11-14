@@ -1,0 +1,57 @@
+# Produktion auf dem Hostinger-VPS. Wird von scripts/deploy.sh gestartet, nicht von Hand.
+# Lokale Entwicklung nutzt weiterhin docker-compose.yml im Projektordner.
+# Werte kommen aus deploy/.env.production (nur auf dem Server, von scripts/deploy.sh angelegt).
+name: resort-members
+
+services:
+  app:
+    build:
+      context: ..
+      target: runner
+    restart: unless-stopped
+    env_file: .env.production
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      TZ: UTC
+    # Nur auf 127.0.0.1 des Servers (Test per SSH-Tunnel); von außen nur über Caddy,
+    # sonst ließe sich das Login-IP-Limit per X-Forwarded-For umgehen.
+    ports: ["127.0.0.1:3100:3000"]
+    networks:
+      default: {}
+      edge:
+        aliases: [resort-members-app] # Ziel für den Caddy von quick-translator
+
+  migrate:
+    build:
+      context: ..
+      target: migrate
+    env_file: .env.production
+    depends_on:
+      db: { condition: service_healthy }
+    profiles: [tools] # läuft nur über "docker compose run --rm migrate"
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      TZ: UTC
+    command:
+      [
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--default-time-zone=+00:00",
+      ]
+    volumes:
+      - ../data/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", 'mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+networks:
+  edge:
+    name: edge
+    external: true
