@@ -8,6 +8,8 @@ next-env.d.ts
 .env.local
 .env*.local
 .DS_Store
+playwright-report
+test-results
 
 # Produktion (nur auf dem Server)
 /data/

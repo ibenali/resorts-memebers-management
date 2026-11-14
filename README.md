@@ -14,6 +14,8 @@ Voraussetzungen: Node.js 22 (siehe `.nvmrc`), Docker.
 cp .env.example .env
 docker compose up -d mysql
 npm install
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
@@ -30,6 +32,28 @@ http://localhost:3000/api/health.
 | `npm run typecheck`           | TypeScript-Prüfung                                  |
 | `npm test`                    | Unit-Tests (Vitest)                                 |
 | `npm run format`              | Prettier                                            |
+
+## Datenbank
+
+MySQL 8 / MariaDB, Schema in `src/lib/db/schema.ts`, Migrationen als SQL in `drizzle/`.
+Tabellen: `members`, `sessions`, `resorts`, `seasons`, `feedback`, `vacation_requests`, `audit_log`.
+
+Schema ändern: `schema.ts` anpassen, `npm run db:generate -- --name <beschreibung>`,
+die erzeugte SQL-Datei prüfen und mit committen.
+
+### Test-Zugänge (nur Entwicklung/Staging)
+
+Nach `npm run db:seed`:
+
+| Mitgliedsnummer | Passwort            | Hinweis                                |
+| --------------- | ------------------- | -------------------------------------- |
+| `M100001`       | `Urlaub-2026-Test`  | normales Konto                         |
+| `M100002`       | `Erstpasswort-2026` | muss Passwort beim ersten Login ändern |
+
+Der Seed verweigert `NODE_ENV=production`, außer mit `ALLOW_SEED=1`. Bestehende Test-Konten
+werden nicht überschrieben; `SEED_RESET_PASSWORDS=1` setzt sie auf den Seed-Stand zurück.
+
+Alle Zeitstempel in der Datenbank sind UTC (jede Verbindung setzt `time_zone = '+00:00'`).
 
 ## Sprache
 
