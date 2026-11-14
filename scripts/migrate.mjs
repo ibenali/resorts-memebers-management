@@ -4,6 +4,7 @@
 // auch ohne devDependencies (tsx, drizzle-kit) läuft.
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from "drizzle-orm/mysql2/migrator";
+import { fileURLToPath } from "node:url";
 import mysql from "mysql2/promise";
 
 const url = process.env.DATABASE_URL;
@@ -13,9 +14,10 @@ if (!url) {
 }
 
 const connection = await mysql.createConnection({ uri: url, multipleStatements: true });
+await connection.query("SET time_zone = '+00:00'");
 try {
   await migrate(drizzle(connection), {
-    migrationsFolder: new URL("../drizzle", import.meta.url).pathname,
+    migrationsFolder: fileURLToPath(new URL("../drizzle", import.meta.url)),
   });
   console.log("Migrationen angewandt.");
 } catch (error) {

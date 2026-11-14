@@ -50,7 +50,10 @@ Nach `npm run db:seed`:
 | `M100001`       | `Urlaub-2026-Test`  | normales Konto                         |
 | `M100002`       | `Erstpasswort-2026` | muss Passwort beim ersten Login ändern |
 
-Der Seed verweigert `NODE_ENV=production`, außer mit `ALLOW_SEED=1`.
+Der Seed verweigert `NODE_ENV=production`, außer mit `ALLOW_SEED=1`. Bestehende Test-Konten
+werden nicht überschrieben; `SEED_RESET_PASSWORDS=1` setzt sie auf den Seed-Stand zurück.
+
+Alle Zeitstempel in der Datenbank sind UTC (jede Verbindung setzt `time_zone = '+00:00'`).
 
 ## Anmeldung und Sessions
 
