@@ -14,6 +14,15 @@ import {
   tinyint,
   varchar,
 } from "drizzle-orm/mysql-core";
+import {
+  feedbackCategories,
+  feedbackStatuses,
+  memberRoles,
+  seasonTypes,
+  vacationStatuses,
+} from "./enums";
+
+export * from "./enums";
 
 const createdAt = () =>
   datetime("created_at", { mode: "date" })
@@ -33,6 +42,7 @@ export const members = mysqlTable("members", {
   email: varchar("email", { length: 255 }),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   mustChangePassword: boolean("must_change_password").notNull().default(false),
+  role: mysqlEnum("role", memberRoles).notNull().default("member"),
   street: varchar("street", { length: 200 }),
   postalCode: varchar("postal_code", { length: 20 }),
   city: varchar("city", { length: 100 }),
@@ -79,9 +89,6 @@ export const resorts = mysqlTable("resorts", {
   updatedAt: updatedAt(),
 });
 
-export const seasonTypes = ["peak", "high", "low"] as const;
-export type SeasonType = (typeof seasonTypes)[number];
-
 export const seasons = mysqlTable(
   "seasons",
   {
@@ -96,9 +103,6 @@ export const seasons = mysqlTable(
   },
   (t) => [index("seasons_resort_start_idx").on(t.resortId, t.startDate)],
 );
-
-export const feedbackCategories = ["general", "resort", "booking", "website", "other"] as const;
-export const feedbackStatuses = ["new", "read", "answered"] as const;
 
 export const feedback = mysqlTable(
   "feedback",
@@ -116,9 +120,6 @@ export const feedback = mysqlTable(
   },
   (t) => [index("feedback_member_created_idx").on(t.memberId, t.createdAt)],
 );
-
-export const vacationStatuses = ["pending", "approved", "rejected", "cancelled"] as const;
-export type VacationStatus = (typeof vacationStatuses)[number];
 
 export const vacationRequests = mysqlTable(
   "vacation_requests",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { feedbackCategories } from "@/lib/db/schema";
+import { feedbackCategories } from "@/lib/db/enums";
 import { getMessages } from "@/lib/i18n";
 import { submitFeedbackAction, type FeedbackState } from "./actions";
 

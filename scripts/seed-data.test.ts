@@ -7,11 +7,12 @@ const dayOfYear = (mmdd: string) => {
 };
 
 describe("Seed-Daten", () => {
-  it("hat 3 Resorts und 2 Test-Mitglieder mit eindeutigen Schlüsseln", () => {
+  it("hat 3 Resorts, 2 Test-Mitglieder und 1 Admin mit eindeutigen Schlüsseln", () => {
     expect(seedResorts).toHaveLength(3);
     expect(new Set(seedResorts.map((r) => r.slug)).size).toBe(3);
-    expect(seedMembers).toHaveLength(2);
-    expect(new Set(seedMembers.map((m) => m.memberNo)).size).toBe(2);
+    expect(seedMembers).toHaveLength(3);
+    expect(new Set(seedMembers.map((m) => m.memberNo)).size).toBe(3);
+    expect(seedMembers.filter((m) => m.role === "admin")).toHaveLength(1);
   });
 
   it.each(seedResorts.map((r) => [r.slug, r] as const))(
