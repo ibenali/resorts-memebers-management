@@ -52,6 +52,20 @@ Nach `npm run db:seed`:
 
 Der Seed verweigert `NODE_ENV=production`, außer mit `ALLOW_SEED=1`.
 
+## Anmeldung und Sessions
+
+- Login mit Mitgliedsnummer und Passwort (`/login`), Logout im Kopfbereich.
+- Sessions liegen in der Tabelle `sessions` (nur SHA-256 des Cookie-Tokens), Cookie `session`
+  ist `HttpOnly`, `SameSite=Lax` und in Produktion `Secure`. Laufzeit 7 Tage gleitend, maximal 30 Tage.
+- Nach 5 Fehlversuchen ist das Konto 15 Minuten gesperrt; zusätzlich max. 20 Fehlversuche
+  pro IP in 15 Minuten. Alle Anmeldeereignisse landen in `audit_log`.
+- Konten mit `must_change_password` landen nach dem Login auf `/passwort-aendern`.
+- `src/middleware.ts` leitet ohne Cookie zum Login. Die echte Prüfung macht
+  `requireMember()` aus `src/lib/auth/guard.ts`: **jede neue Seite und Server Action unter
+  `(member)` muss es selbst aufrufen** und Daten nur mit `member.id` aus der Session laden.
+- Die Client-IP ist der letzte Eintrag von `X-Forwarded-For` (genau ein Reverse Proxy davor).
+- `COOKIE_SECURE=false` schaltet `Secure` ab, falls die App ohne HTTPS getestet wird.
+
 ## Sprache
 
 Die Oberfläche ist deutsch. Alle Texte liegen in `src/lib/i18n/de.ts`, damit weitere

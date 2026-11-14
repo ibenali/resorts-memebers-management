@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { logoutAction } from "@/lib/auth/actions";
 import { getMessages } from "@/lib/i18n";
 
-export function SiteHeader() {
+export function SiteHeader({ memberName, memberNo }: { memberName: string; memberNo: string }) {
   const t = getMessages();
   const links = [
     { href: "/", label: t.nav.dashboard },
@@ -31,6 +32,20 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-stone-600">
+            <span className="sr-only">{t.auth.loggedInAs} </span>
+            {memberName} <span className="text-stone-400">({memberNo})</span>
+          </span>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="rounded-md border border-stone-300 px-3 py-1.5 hover:bg-stone-100"
+            >
+              {t.auth.logout}
+            </button>
+          </form>
+        </div>
       </div>
     </header>
   );
