@@ -12,7 +12,10 @@ services:
     env_file: .env.production
     depends_on:
       db: { condition: service_healthy }
-    # Nur lokal auf dem Server erreichbar (Test per SSH-Tunnel); von außen geht es über Caddy.
+    environment:
+      TZ: UTC
+    # Nur auf 127.0.0.1 des Servers (Test per SSH-Tunnel); von außen nur über Caddy,
+    # sonst ließe sich das Login-IP-Limit per X-Forwarded-For umgehen.
     ports: ["127.0.0.1:3100:3000"]
     networks:
       default: {}
@@ -32,7 +35,14 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     env_file: .env.production
-    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    environment:
+      TZ: UTC
+    command:
+      [
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--default-time-zone=+00:00",
+      ]
     volumes:
       - ../data/mysql:/var/lib/mysql
     healthcheck:
