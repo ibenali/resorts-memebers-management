@@ -1,3 +1,5 @@
+import { vacationConfig } from "@/lib/vacation/rules";
+
 /**
  * Deutsche Texte der Oberfläche. Alle sichtbaren Texte laufen über dieses
  * Wörterbuch, damit später weitere Sprachen ergänzt werden können.
@@ -130,6 +132,51 @@ export const de = {
     addressSaved: "Ihre Adresse wurde gespeichert.",
     addressInvalid:
       "Bitte prüfen Sie die Adresse: alle Felder sind Pflicht, die PLZ darf nur Buchstaben, Ziffern, Leerzeichen und Bindestriche enthalten.",
+  },
+  vacation: {
+    title: "Urlaub",
+    intro: "Ihre Urlaubsanfragen und deren Status.",
+    newRequest: "Neue Anfrage",
+    newTitle: "Urlaub anfragen",
+    newIntro:
+      "Wählen Sie Resort und Zeitraum. Die Saison ergibt sich aus dem Anreisetag; das Resort-Team prüft Ihre Anfrage.",
+    empty: "Sie haben noch keine Urlaubsanfragen gestellt.",
+    created: "Ihre Anfrage wurde übermittelt. Sie sehen den Status hier in der Übersicht.",
+    cancelled: "Die Anfrage wurde storniert.",
+    cancelFailed: "Diese Anfrage kann nicht mehr storniert werden.",
+    resort: "Resort",
+    chooseResort: "Bitte wählen",
+    arrival: "Anreise",
+    departure: "Abreise",
+    nights: (n: number) => (n === 1 ? "1 Nacht" : `${n} Nächte`),
+    guests: "Personen",
+    guestsCount: (n: number) => (n === 1 ? "1 Person" : `${n} Personen`),
+    note: "Bemerkung (optional)",
+    notePlaceholder: "z. B. Wunsch nach Erdgeschoss, Anreise mit Hund …",
+    season: "Saison",
+    seasonPreview: "Saison laut Anreisetag",
+    noSeason: "keine Saison hinterlegt",
+    submit: "Anfrage senden",
+    cancel: "Stornieren",
+    cancelConfirm: "Anfrage wirklich stornieren?",
+    requestedAt: "angefragt am",
+    upcomingTitle: "Ihre nächsten Urlaube",
+    upcomingEmpty: "Keine offenen Urlaubsanfragen.",
+    allRequests: "Alle Anfragen",
+    statuses: {
+      pending: "In Prüfung",
+      approved: "Bestätigt",
+      rejected: "Abgelehnt",
+      cancelled: "Storniert",
+    },
+    errors: {
+      invalid: "Bitte füllen Sie alle Pflichtfelder korrekt aus.",
+      resort: "Das gewählte Resort ist nicht verfügbar.",
+      start_in_past: "Die Anreise darf nicht in der Vergangenheit liegen.",
+      end_before_start: "Die Abreise muss mindestens einen Tag nach der Anreise liegen.",
+      too_long: `Ein Aufenthalt darf höchstens ${vacationConfig.maxNights} Nächte dauern.`,
+      overlap: "Sie haben für diesen Zeitraum bereits eine offene oder bestätigte Anfrage.",
+    },
   },
   common: {
     comingSoon: "Diese Seite wird gerade gebaut.",
